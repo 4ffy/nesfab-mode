@@ -109,6 +109,65 @@
     "while")
   "NESFab tokens that should start a new block.")
 
+(defconst nesfab-asm-keywords
+  '("adc"
+    "and"
+    "asl"
+    "bcc"
+    "bcs"
+    "beq"
+    "bit"
+    "bmi"
+    "bne"
+    "bpl"
+    "brk"
+    "bvc"
+    "bvs"
+    "clc"
+    "cld"
+    "cli"
+    "clv"
+    "cmp"
+    "cpx"
+    "cpy"
+    "dec"
+    "dex"
+    "dey"
+    "eor"
+    "inc"
+    "inx"
+    "iny"
+    "jmp"
+    "jsr"
+    "lda"
+    "ldx"
+    "ldy"
+    "lsr"
+    "nop"
+    "ora"
+    "pha"
+    "php"
+    "pla"
+    "plp"
+    "rol"
+    "ror"
+    "rti"
+    "rts"
+    "sbc"
+    "sec"
+    "sed"
+    "sei"
+    "sta"
+    "stx"
+    "sty"
+    "tax"
+    "tay"
+    "tsx"
+    "txa"
+    "txs"
+    "tya")
+  "6502 assembly instructions.")
+
 
 
 ;;; Font locking ===============================================================
@@ -127,6 +186,11 @@
   (eval-when-compile
     (rx symbol-start (eval `(or ,@nesfab-constants)) symbol-end))
   "Regex matching NESFab constants.")
+
+(defconst nesfab-asm-keyword-regex
+  (eval-when-compile
+    (rx symbol-start (eval `(or ,@nesfab-asm-keywords)) symbol-end))
+  "Regex matching NESFab assembly instructions.")
 
 (defconst nesfab-builtin-type-regex
   (eval-when-compile
@@ -179,7 +243,8 @@
 (defvar nesfab-font-lock-keywords-2
   `(,@nesfab-font-lock-keywords-1
     (,nesfab-keyword-regex . font-lock-keyword-face)
-    (,nesfab-constant-regex . font-lock-constant-face)))
+    (,nesfab-constant-regex . font-lock-constant-face)
+    (,nesfab-asm-keyword-regex . font-lock-keyword-face)))
 
 (defvar nesfab-font-lock-keywords-3
   `(,@nesfab-font-lock-keywords-2
