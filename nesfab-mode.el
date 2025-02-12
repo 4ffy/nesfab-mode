@@ -214,16 +214,10 @@
          (looking-at "^[[:space:]]*/[/*]")))))
 
 (defun nesfab--goto-last-source-line ()
-  "Move point to the previous nonblank line."
+  "Move point to the previous nonblank line, or to the beginning of the buffer."
   (forward-line -1)
   (while (and (not (nesfab--source-line-p)) (not (bobp)))
     (forward-line -1)))
-
-(defun nesfab--previous-indent ()
-  "Return the indentation of the previous nonblank line."
-  (save-excursion
-    (nesfab--goto-last-source-line)
-    (current-indentation)))
 
 (defun nesfab--first-token-of-line ()
   "Return the first token (up to the first space) of the current line."
@@ -232,71 +226,50 @@
     (re-search-forward "[^[:space:]]+")
     (string-trim (match-string 0))))
 
-(defun nesfab--first-token-of-last-line ()
-  "Return the first token (up to the first space) of the previous nonblank line."
-  (save-excursion
-    (nesfab--goto-last-source-line)
-    (nesfab--first-token-of-line)))
-
 (defun nesfab--block-start-p ()
   "Determine whether the current line starts a block."
   (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens))
 
 (defun nesfab--goto-last-block-start ()
-  "Move point to the last line that starts a block."
+  "Move point to the last block-starting line, or to the beginning of the buffer."
   (nesfab--goto-last-source-line)
   (while (and (not (nesfab--block-start-p)) (not (bobp)))
     (nesfab--goto-last-source-line)))
 
-(defun nesfab--previous-block-start-indent ()
+(defun nesfab--root-block-p ()
+  "Determine whether there are no previous block-starting lines."
+  (save-excursion
+    (nesfab--goto-last-block-start)
+    (bobp)))
+
+(defun nesfab--last-block-start-indent ()
   "Return the indentation of the previous block-starting line."
   (save-excursion
     (nesfab--goto-last-block-start)
     (current-indentation)))
 
-(defun nesfab--calculate-indent (offset)
-  "Calculate indentation for the current line.
+(defun nesfab--calculate-block-indent ()
+  "Use the last block-starting line to calculate an indent."
+  (if (nesfab--root-block-p)
+      0
+    (+ nesfab-indent-width (nesfab--last-block-start-indent))))
 
-If OFFSET is zero, set indentation to the previous source line's indentation.
-Otherwise, decrease the current indentation if OFFSET is negative or increase
-the current indentation if OFFSET is positive.
-
-This may return a negative number if decreasing indent at the beginning of a
-line."
-  (+ (cond
-      ((= offset 0)
-       (nesfab--previous-indent))
-      ((< offset 0)
-       (- (current-indentation) nesfab-indent-width))
-      ((> offset 0)
-       (+ (current-indentation) nesfab-indent-width)))
-     ;; Increase indent on new block.
-     (if (member
-          (nesfab--first-token-of-last-line) nesfab-increase-indent-tokens)
-         nesfab-indent-width
-       0)))
-
-(defun nesfab--indent-line (offset)
-  "Indent the current line according to OFFSET (see `nesfab--calculate-indent').
-
-If the calculated indent is negative, set indentation to one past
-the indentation of the previous nonblank source line."
-  (let ((indent (nesfab--calculate-indent offset)))
-    (when (< indent 0)
-      (setq indent (+ nesfab-indent-width (nesfab--previous-indent))))
-    (indent-line-to indent)))
+(defun nesfab--indent-line (repeat)
+  "Indent the current line.
+If REPEAT is non-nil, decrease the current indent. Otherwise,
+calculate indent according to block structure."
+  (let ((block-indent (nesfab--calculate-block-indent))
+        (decrease-indent (- (current-indentation) nesfab-indent-width)))
+    (indent-line-to
+     (if (and repeat (>= decrease-indent 0))
+         decrease-indent
+       block-indent))))
 
 (defun nesfab-indent-line-function ()
   "Main indent function for NESFab."
   (nesfab--indent-line
-   (cond
-    ((and (eq this-command 'indent-for-tab-command)
-          (eq last-command this-command))
-     -1)
-    ((eq this-command 'indent-for-tab-command)
-     1)
-    (t
-     0))))
+   (and (eq this-command 'indent-for-tab-command)
+        (eq last-command this-command))))
 
 ;;; Mode declaration ===========================================================
 
@@ -315,6 +288,7 @@ the indentation of the previous nonblank source line."
      nesfab-font-lock-keywords-3)
     nil nil nil nil)
   indent-line-function #'nesfab-indent-line-function
+  indent-region-function (lambda (x y)) ; noop, not smart enough.
   indent-tabs-mode nil))
 
 ;;;###autoload
