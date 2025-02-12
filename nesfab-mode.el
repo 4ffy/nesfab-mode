@@ -151,7 +151,7 @@
     (rx
      line-start
      (* space)
-     (or "fn" "mode" "nmi")
+     (or "asm fn" "fn" "mode" "nmi")
      (+ space)
      (group (eval `(regexp ,nesfab-identifier-regex)))))
   "Regex matching the function name in NESFab function declarations.")
