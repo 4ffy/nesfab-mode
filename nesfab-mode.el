@@ -94,11 +94,13 @@
 (defconst nesfab-increase-indent-tokens
   '("asm"
     "case"
+    "default"
     "do"
     "else"
     "fn"
     "for"
     "if"
+    "label"
     "mode"
     "nmi"
     "struct"
