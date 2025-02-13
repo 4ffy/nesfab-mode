@@ -307,7 +307,7 @@
   "Determine whether there are no previous block-starting lines."
   (save-excursion
     (nesfab--goto-last-block-start)
-    (bobp)))
+    (and (bobp) (not (nesfab--block-start-p)))))
 
 (defun nesfab--last-block-start-indent ()
   "Return the indentation of the previous block-starting line."
