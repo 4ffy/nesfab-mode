@@ -322,9 +322,17 @@
     (re-search-forward "[^[:space:]]+")
     (string-trim (match-string 0))))
 
+(defun nesfab--line-opens-paren-p ()
+  "Determine whether the current line ends with an open paren or bracket."
+  (save-excursion
+    (move-end-of-line nil)
+    (looking-back "(")))
+
 (defun nesfab--block-start-p ()
   "Determine whether the current line starts a block."
-  (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens))
+  (or
+   (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens)
+   (nesfab--line-opens-paren-p)))
 
 (defun nesfab--goto-last-block-start ()
   "Move point to the last block-starting line, or to the beginning of the buffer."
