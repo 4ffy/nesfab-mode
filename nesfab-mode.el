@@ -229,6 +229,7 @@
   (eval-when-compile
     (rx
      (eval `(regexp ,nesfab-builtin-type-regex))
+     (? "[" (*? digit) "]")
      (+ space)
      (group (eval `(regexp ,nesfab-identifier-regex))))))
 
