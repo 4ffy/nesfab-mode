@@ -257,15 +257,7 @@
 
 
 
-;;; Primitive Indentation ======================================================
-
-;;; For now, let's set indentation up as follows:
-;;;
-;;;  - Default indent is whatever the last source line was.
-;;;  - If the last line is a "block starter," increase indent.
-;;;  - Pressing tab once puts indent at one past the previous indent.  Further
-;;;    presses move the indent incrementally back toward the beginning of the
-;;;    line, similar to `python-mode'.
+;;; Indentation ================================================================
 
 (defun nesfab--in-comment-p ()
   "Determine whether point is inside a comment."
