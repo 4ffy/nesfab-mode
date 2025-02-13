@@ -273,6 +273,12 @@
          (looking-at "^[[:space:]]*$")
          (looking-at "^[[:space:]]*/[/*]")))))
 
+(defun nesfab--annotation-line-p ()
+  "Determine whether the current line has a function or loop annotation."
+  (save-excursion
+    (back-to-indentation)
+    (looking-at ":")))
+
 (defun nesfab--goto-last-source-line ()
   "Move point to the previous nonblank line, or to the beginning of the buffer."
   (forward-line -1)
@@ -310,9 +316,13 @@
 
 (defun nesfab--calculate-block-indent ()
   "Use the last block-starting line to calculate an indent."
-  (if (nesfab--root-block-p)
-      0
-    (+ nesfab-indent-width (nesfab--last-block-start-indent))))
+  (cond
+   ((nesfab--root-block-p)
+    0)
+   ((nesfab--annotation-line-p)
+    (nesfab--last-block-start-indent))
+   (t
+    (+ nesfab-indent-width (nesfab--last-block-start-indent)))))
 
 (defun nesfab--indent-line (repeat)
   "Indent the current line.
