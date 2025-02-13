@@ -95,7 +95,8 @@
   "NESFab constant values.")
 
 (defconst nesfab-increase-indent-tokens
-  '("asm"
+  '("[]"
+    "asm"
     "case"
     "chrrom"
     "data"
