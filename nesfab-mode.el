@@ -25,7 +25,8 @@
 
 ;;; Code:
 
-(require 'rx)
+(eval-when-compile
+  (require 'rx))
 
 ;;; Customization ==============================================================
 
