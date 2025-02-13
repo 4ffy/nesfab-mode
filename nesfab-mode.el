@@ -237,6 +237,15 @@
      (group (eval `(regexp ,nesfab-identifier-regex)))))
   "Regex matching the struct name in NESFab struct declarations.")
 
+(defconst nesfab-group-name-regex
+  (eval-when-compile
+    (rx
+     line-start
+     (* space)
+     (or "data" "vars")
+     (+ space)
+     (group "/" (eval `(regexp ,nesfab-identifier-regex))))))
+
 
 
 ;;; Font lock levels ===========================================================
@@ -256,7 +265,8 @@
     (,nesfab-builtin-type-regex . font-lock-type-face)
     (,nesfab-variable-declaration-regex 1 font-lock-variable-name-face)
     (,nesfab-function-name-regex 1 font-lock-function-name-face)
-    (,nesfab-struct-name-regex 1 font-lock-type-face)))
+    (,nesfab-struct-name-regex 1 font-lock-type-face)
+    (,nesfab-group-name-regex 1 font-lock-variable-name-face)))
 
 (defvar nesfab-font-lock-keywords nesfab-font-lock-keywords-1)
 
