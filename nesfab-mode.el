@@ -322,11 +322,6 @@
     (re-search-forward "[^[:space:]]+")
     (string-trim (match-string 0))))
 
-(defun nesfab--block-start-p ()
-  "Determine whether the current line starts a block."
-  (or (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens)
-      (nesfab--line-opens-paren-p)))
-
 (defun nesfab--goto-last-source-line ()
   "Move point to the previous nonblank line, or to the beginning of the buffer."
   (forward-line -1)
@@ -339,6 +334,11 @@
     (nesfab--goto-last-source-line)
     (current-indentation)))
 
+(defun nesfab--block-start-p ()
+  "Determine whether the current line starts a block."
+  (or (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens)
+      (nesfab--line-opens-paren-p)))
+
 (defun nesfab--goto-last-block-start ()
   "Move point to the last block-starting line, or to the beginning of the buffer."
   (nesfab--goto-last-source-line)
@@ -350,6 +350,12 @@
   (save-excursion
     (nesfab--goto-last-block-start)
     (current-indentation)))
+
+(defun nesfab--last-line-starts-block-p ()
+  "Determine whether the last source line starts a new block."
+  (save-excursion
+    (nesfab--goto-last-source-line)
+    (nesfab--block-start-p)))
 
 (defun nesfab--root-block-p ()
   "Determine whether there are no previous block-starting lines."
@@ -364,8 +370,10 @@
     0)
    ((nesfab--annotation-line-p)
     (nesfab--last-block-start-indent))
+   ((nesfab--last-line-starts-block-p)
+    (+ nesfab-indent-width (nesfab--last-block-start-indent)))
    (t
-    (+ nesfab-indent-width (nesfab--last-block-start-indent)))))
+    (nesfab--last-line-start-indent))))
 
 (defun nesfab--indent-line (repeat)
   "Indent the current line.
