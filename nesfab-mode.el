@@ -229,7 +229,7 @@
   (eval-when-compile
     (rx
      (eval `(regexp ,nesfab-builtin-type-regex))
-     (? "[" (*? digit) "]")
+     (?  "[" (*? digit) "]")
      (+ space)
      (group (eval `(regexp ,nesfab-identifier-regex))))))
 
@@ -290,7 +290,7 @@
 
 ;;; Indentation ================================================================
 
-(defun nesfab--in-comment-p ()
+(defun nesfab--comment-p ()
   "Determine whether point is inside a comment."
   (save-excursion (elt (syntax-ppss (point)) 4)))
 
@@ -299,21 +299,21 @@
   (save-excursion
     (move-beginning-of-line nil)
     (not
-     (or (nesfab--in-comment-p)
+     (or (nesfab--comment-p)
          (looking-at "^[[:space:]]*$")
          (looking-at "^[[:space:]]*/[/*]")))))
 
 (defun nesfab--annotation-line-p ()
-  "Determine whether the current line has a function or loop annotation."
+  "Determine whether the current line is a function or loop annotation."
   (save-excursion
     (back-to-indentation)
     (looking-at ":")))
 
-(defun nesfab--goto-last-source-line ()
-  "Move point to the previous nonblank line, or to the beginning of the buffer."
-  (forward-line -1)
-  (while (and (not (nesfab--source-line-p)) (not (bobp)))
-    (forward-line -1)))
+(defun nesfab--line-opens-paren-p ()
+  "Determine whether the current line ends with an open paren."
+  (save-excursion
+    (move-end-of-line nil)
+    (looking-back "(")))
 
 (defun nesfab--first-token-of-line ()
   "Return the first token (up to the first space) of the current line."
@@ -322,17 +322,22 @@
     (re-search-forward "[^[:space:]]+")
     (string-trim (match-string 0))))
 
-(defun nesfab--line-opens-paren-p ()
-  "Determine whether the current line ends with an open paren or bracket."
-  (save-excursion
-    (move-end-of-line nil)
-    (looking-back "(")))
-
 (defun nesfab--block-start-p ()
   "Determine whether the current line starts a block."
-  (or
-   (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens)
-   (nesfab--line-opens-paren-p)))
+  (or (member (nesfab--first-token-of-line) nesfab-increase-indent-tokens)
+      (nesfab--line-opens-paren-p)))
+
+(defun nesfab--goto-last-source-line ()
+  "Move point to the previous nonblank line, or to the beginning of the buffer."
+  (forward-line -1)
+  (while (and (not (nesfab--source-line-p)) (not (bobp)))
+    (forward-line -1)))
+
+(defun nesfab--last-line-start-indent ()
+  "Return the indentation of the last source line."
+  (save-excursion
+    (nesfab--goto-last-source-line)
+    (current-indentation)))
 
 (defun nesfab--goto-last-block-start ()
   "Move point to the last block-starting line, or to the beginning of the buffer."
@@ -340,17 +345,17 @@
   (while (and (not (nesfab--block-start-p)) (not (bobp)))
     (nesfab--goto-last-source-line)))
 
-(defun nesfab--root-block-p ()
-  "Determine whether there are no previous block-starting lines."
-  (save-excursion
-    (nesfab--goto-last-block-start)
-    (and (bobp) (not (nesfab--block-start-p)))))
-
 (defun nesfab--last-block-start-indent ()
   "Return the indentation of the previous block-starting line."
   (save-excursion
     (nesfab--goto-last-block-start)
     (current-indentation)))
+
+(defun nesfab--root-block-p ()
+  "Determine whether there are no previous block-starting lines."
+  (save-excursion
+    (nesfab--goto-last-block-start)
+    (and (bobp) (not (nesfab--block-start-p)))))
 
 (defun nesfab--calculate-block-indent ()
   "Use the last block-starting line to calculate an indent."
